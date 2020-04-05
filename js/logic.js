@@ -19,7 +19,7 @@ $(document).ready(function () {
 
 
     //check if JS is loaded properly 
-    console.log("ready!")
+    console.log("ready!");
 
 
     //click handler for submit button
@@ -31,26 +31,12 @@ $(document).ready(function () {
         //testing button click works
         console.log("submitted");
 
-        // if the search bar has a value in it..
-        if ($('#searchBar').val() !== "") {
-            //set searched value to variable
-            zipcode = $('#searchBar').val();
-            window.searchText = zipcode;
-            getLatLngByZipcode(zipcode);
-        }
-        // if the zipcode has been defined by the user sharing their location..
-        else if (zipcode !== "") {
-            window.searchText = zipcode;
-            getWeather();
-        }
-        // if there is no zipcode saved
-        else {
-            console.log("No location entered");
-            return;
-        }
 
         // Define the settings for the API call as per yelp API documentation
         if ($('#searchBar').val() !== "") {
+            zipcode = $('#searchBar').val();
+            window.searchText = zipcode;
+            getLatLngByZipcode(zipcode);
             var settings = {
                 "async": true,
                 "crossDomain": true,
@@ -84,7 +70,7 @@ $(document).ready(function () {
             let results = response.businesses;
 
             //log your object, make sure it returns properly
-            console.log(response.businesses)
+            console.log(response.businesses);
 
             // center map on first result
             var latlon = { lat: results[0].coordinates.latitude, lng: results[0].coordinates.longitude };
@@ -93,7 +79,13 @@ $(document).ready(function () {
                 center: latlon
             });
 
+            getWeather();
+            $(".center").removeClass("hidden");
+
+          
             var display = $('#my-lists');
+
+           display.empty();
 
             var itemPerPage = 6; // custom item per page
             var currentPage = 1;
@@ -102,6 +94,7 @@ $(document).ready(function () {
             if (results.length < itemPerPage) {
                 endItem = results.length - 1;
             }
+
 
             function showItems(start, end) {
                 for (var i = start; i <= end; i++) {
@@ -118,6 +111,7 @@ $(document).ready(function () {
                     console.log("Name: " + name)
                     console.log("Image: " + image)
                     console.log("Address: " + address)
+
                     console.log("Phone: " + phone);
     
                     // method 2, used jQuery
@@ -130,12 +124,13 @@ $(document).ready(function () {
                     linkEl.append( // inside it, append an image
                         $('<img>') // new image
                           .attr('src', image) // set image SRC attribute
+                        .addClass("restaurantImage")
                       ); // end append
                     var addressEl = $('<p></p>').text(address).addClass('lead');
                     var phoneEl = $('<p></p>').text(phone).addClass('subheader');
                     var saveToEl = $('<buton>').text('Save to favorite')
                     .addClass('Savetofav button primary')
-                    .click( createSaveToCallback( name ) );
+                    // .click( createSaveToCallback( name ) );
     
                     itemEl.append(nameEl);
                     itemEl.append(linkEl);
@@ -149,11 +144,11 @@ $(document).ready(function () {
                 }
             }
 
-            function createSaveToCallback(itemEl){
-                return function(){
-                  alert('you clicked on ' + name);
-                }
-              }
+            // function createSaveToCallback(itemEl){
+            //     return function(){
+            //       alert('you clicked on ' + name);
+            //     }
+            // }
 
             showItems(startItem, endItem);
 
@@ -178,18 +173,12 @@ $(document).ready(function () {
                         $("#loadMore").hide();
                     }
                 });
-            }
+            }       
 
-
-            
-
-            var html = '';
+           
 
         }).fail(function (err) { console.log("something went wrong") });
     });
-   
-
-
 
     // Click handler for share location button
     $("#share-location").on("click", function (event) {
@@ -197,19 +186,20 @@ $(document).ready(function () {
         event.preventDefault();
         var startPos;
 
+        // clear out the search bar
+        $('#searchBar').val("");
+
         var geoSuccess = function (position) {
             startPos = position;
             userLat = startPos.coords.latitude;
             userLon = startPos.coords.longitude;
-            geocodeLatLng(geocoder, map);
 
             // reload the map centered on user's location
             initMap();
-            // get the weather at the user's location
-            getWeather();
+            geocodeLatLng(geocoder, map);
         };
-        console.log(userLat)
-        console.log(userLon)
+        console.log(userLat);
+        console.log(userLon);
 
         var geoError = function (error) {
             console.log('Error occurred. Error code: ' + error.code);
@@ -221,14 +211,7 @@ $(document).ready(function () {
         };
         navigator.geolocation.getCurrentPosition(geoSuccess, geoError);
 
-
-
     });
-
-
-
-
-
 
 });
 
@@ -251,6 +234,7 @@ function geocodeLatLng(geocoder, map) {
             console.log(zipcode)
             // update zipcode in search field
             $('#searchBar').val(zipcode);
+            console.log(zipcode)
         }
         else {
             window.alert('Geocoder failed due to: ' + status);
@@ -259,12 +243,10 @@ function geocodeLatLng(geocoder, map) {
 }
 
 
-
 // Portions of the weather api code were taken from the weather dashboard project
 function getWeather() {
     // query url for current weather
     var weatherQueryUrl = "https://api.openweathermap.org/data/2.5/weather?lat=" + userLat + "&lon=" + userLon + "&appid=a07b059ae0ff859a91d785bcde02804c";
-
     // call for current weather
     $.ajax({
         url: weatherQueryUrl,
@@ -283,7 +265,8 @@ function getWeather() {
         // get current date
         var currentDate = moment().format('l');
         // add date to screen
-        $("#weather").text("Weather: " + currentDate);
+        $("#date").text(currentDate);
+        // $("#weather").text("Weather:");
 
         // get current temp
         var currentTemp = response.main.temp;
@@ -292,6 +275,10 @@ function getWeather() {
         currentTemp = Math.round(currentTemp);
         // add temp to screen
         $("#temp").text("Temperature: " + currentTemp + " °F");
+
+        // get current wind
+        var wind = response.wind.speed;
+        $("#wind").text("Wind speed: " + wind + " MPH");
     });
 }
 // gets current weather based on api response. The things currently being returned are codes for the weather icon
@@ -314,7 +301,7 @@ function getSkyIcon(b) {
         return "10d";
     }
     else if (a == 781) {
-        return // TORNADO
+        return; // TORNADO
     }
     // mist/fog/dust except 781 is tornado
     else if (a[0] == 7) {
@@ -339,11 +326,24 @@ function getLatLngByZipcode(zipcode) {
             userLon = results[0].geometry.location.lng();
             // get the weather at the zipcode the user entered
             getWeather();
+            $(".center").removeClass("hidden");
         } else {
-            alert("Request failed.")
+            alert("Request failed.");
         }
-    })
+    });  
 
-   
+// function loadAnimation() {
 
+//     var elem = $("#loader");
+//     var degree = 0;
+//     var interval = setInterval(frame, 5);
+//     function frame() {
+//         if ($("#loader-row").classList.contains("hidden")) {
+//             clearInterval(interval);
+//         } else {
+//             degree += 5;
+//             elem.setAttribute('style','transform:rotate(' + degree + 'deg)')
+//         }
+
+//     }
 }
